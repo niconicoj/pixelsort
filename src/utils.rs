@@ -8,7 +8,7 @@ pub fn generate_id() -> u128 {
     .as_millis();
 }
 
-pub fn lightness(pixel: &[u8]) -> f32 {
+pub fn lightness(pixel: &[u8; 3]) -> f32 {
   return  rgb_to_hsv(pixel).value;
 }
 
