@@ -7,29 +7,44 @@ mod intervals;
 mod sorter;
 
 fn main() {
-    let matches = cli::en();
-    let image_input_path = matches.value_of("INPUT").unwrap();
-    let image_output_path = format!("{}{}", utils::generate_id(), ".png");
-    println!("l? {}, u? {}", matches.is_present("LOWER_THRESHOLD"), matches.is_present("UPPER_THRESHOLD"));
-    println!("opening image {}", image_input_path);
-    let img = image::open(image_input_path).unwrap().rotate270().to_rgb();
+  let matches = cli::en();
+  let image_input_path = matches.value_of("INPUT").unwrap();
+  let image_output_path = format!("{}{}", utils::generate_id(), ".png");
+  println!("opening image...");
+  let mut img = image::open(image_input_path).unwrap();
 
-  if let Some(matches) = matches.subcommand_matches("threshold") {
-    println!("using threshold");
-    let lower = if matches.is_present("lower") {
-      matches.value_of("lower").unwrap().parse().expect("lower threshold has to be an integer between 0 and 255")
-    } else {
-      32
-    };
-    let upper = if matches.is_present("upper") {
-      matches.value_of("upper").unwrap().parse().expect("upper threshold has to be an integer between 0 and 255")
-    } else {
-      223
-    };
-    println!("lower threshold : {}, upper threshold : {}", lower, upper);
-    let intervals = intervals::threshold(&img, lower, upper);
-    let output_img = image::DynamicImage::ImageRgb8(sorter::sort(img, intervals));
+  img = match matches.value_of("direction").unwrap() {
+    "l2r" => img,
+    "r2l" => img.rotate180(),
+    "t2b" => img.rotate270(), 
+    "b2t" => img.rotate90(),
+    _ => panic!("could not determine in which direction to sort the image.")
+  };
 
-    output_img.rotate90().save(image_output_path).expect("something went wrong when saving file.");
-  }
+  let buf = img.to_rgb();
+
+  let mut output_img = match matches.subcommand_name() {
+    Some("threshold") => {
+      let lower = matches.subcommand_matches("threshold")
+        .unwrap().value_of("lower").unwrap().parse().unwrap();
+      let upper = matches.subcommand_matches("threshold")
+        .unwrap().value_of("upper").unwrap().parse().unwrap();
+      println!("computing intervals...");
+      let intervals = intervals::threshold(&buf, lower, upper);
+      println!("sorting pixels...");
+      image::DynamicImage::ImageRgb8(sorter::sort(buf, intervals))
+    },
+    _ => panic!("You need to provide an interval function. For more information use --help.")
+  };
+
+
+  output_img = match matches.value_of("direction").unwrap() {
+    "l2r" => output_img,
+    "r2l" => output_img.rotate180(),
+    "t2b" => output_img.rotate90(), 
+    "b2t" => output_img.rotate270(),
+    _ => panic!("could not determine in which direction to sort the image.")
+  };
+  println!("writing output image...");
+  output_img.save(image_output_path).expect("something went wrong when saving file.");
 }

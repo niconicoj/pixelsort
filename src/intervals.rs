@@ -8,12 +8,12 @@ pub fn threshold(img: &RgbImage, lower_threshold: u8, upper_threshold: u8) -> Ve
 
   for (i,p) in img.pixels().enumerate() {
     if flag.0 {
-      if !(lower_threshold..upper_threshold).contains(&utils::lightness(&p)) {
+      if (lower_threshold..upper_threshold).contains(&utils::lightness(&p)) {
         result.push(flag.1..i);
         flag.0 = false;
       }
     } else {
-      if (lower_threshold..upper_threshold).contains(&utils::lightness(&p)) {
+      if !(lower_threshold..upper_threshold).contains(&utils::lightness(&p)) {
         flag = (true,i);
       }
     }
