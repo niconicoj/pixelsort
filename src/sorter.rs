@@ -1,23 +1,18 @@
-use image::*;
-use crate::utils;
+use image::{Rgb, RgbImage, ImageBuffer, Pixel};
+use std::ops::Range;
+use crate::utils::lightness;
 
-pub fn sort<I>(img: &I) -> ImageBuffer<Rgb<u8>, Vec<u8>>
-  where I: GenericImage<Pixel=Rgb<u8>> {
-  
-    let mut out = ImageBuffer::new(img.dimensions().0, img.dimensions().1);
-    let mut data = vec![];
+pub fn sort(img: RgbImage, intervals: Vec<Range<usize>>) -> ImageBuffer<Rgb<u8>, Vec<u8>> {
+  let mut pixels: Vec<_> = img.pixels().collect();
 
-    for y in 0..img.height() {
-      let mut row = vec![];
-      for x in 0..img.width() {
-        row.push(img.get_pixel(x, y).0);
-      }
-      row.sort_by(|a, b| utils::lightness(a).partial_cmp(&utils::lightness(b)).unwrap());
-      data.push(row);
-    }
+  for interval in intervals.into_iter() {
+    pixels[interval].sort_by(|a,b| lightness(a).cmp(&lightness(b)));
+  }
+  let mut buf = ImageBuffer::new(img.width(), img.height());
 
-    for (x,y,pixel) in out.enumerate_pixels_mut() {
-      *pixel = image::Rgb(data[y as usize][x as usize]);
-    }
-    out
+  for (i, buf_p) in buf.pixels_mut().enumerate() {
+    *buf_p = *pixels[i];
+  }
+
+  buf
 }

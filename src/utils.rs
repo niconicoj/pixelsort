@@ -1,5 +1,5 @@
 use std::time::{SystemTime, UNIX_EPOCH};
-use palette::*;
+use image::{Pixel};
 
 pub fn generate_id() -> u128 {
   return SystemTime::now()
@@ -8,14 +8,7 @@ pub fn generate_id() -> u128 {
     .as_millis();
 }
 
-pub fn lightness(pixel: &[u8; 3]) -> f32 {
-  return  rgb_to_hsv(pixel).value;
-}
-
-fn rgb_to_hsv(pixel: &[u8]) -> Hsv {
-  let red = pixel[0] as f32 / 255.0;
-  let green = pixel[1] as f32 / 255.0;
-  let blue = pixel[2] as f32 /255.0;
-
-  return Srgb::new(red, green, blue).into_hsv();
+pub fn lightness<T>(pixel: &&T) -> u8
+where T: Pixel<Subpixel = u8> {
+  pixel.to_luma()[0] as u8
 }

@@ -3,6 +3,7 @@ extern crate image;
 
 mod cli;
 mod utils;
+mod intervals;
 mod sorter;
 
 fn main() {
@@ -12,13 +13,11 @@ fn main() {
     println!("opening image {}", image_input_path);
     let img = image::open(image_input_path).unwrap().into_rgb();
 
-
-    
     match matches.subcommand_name() {
       Some("threshold") => {
        println!("using threshold");
-       let output_img = sorter::sort(&img);
-
+       let intervals = intervals::threshold(&img, 32, 223);
+       let output_img = sorter::sort(img, intervals);
        output_img.save(image_output_path).expect("something went wrong when saving file.");
 
       },
