@@ -25,5 +25,6 @@ pub fn en() -> ArgMatches<'static> {
     .possible_values(&["l2r", "r2l", "t2b", "b2t"])
     .default_value("l2r"))
   .subcommand(sub::threshold())
+  .subcommand(sub::mask())
   .get_matches();
 }

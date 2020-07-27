@@ -11,7 +11,7 @@ fn main() {
   let image_input_path = matches.value_of("INPUT").unwrap();
   let image_output_path = format!("{}{}", utils::generate_id(), ".png");
   println!("opening image...");
-  let mut img = image::open(image_input_path).unwrap();
+  let mut img = image::open(image_input_path).expect("image not found.");
 
   img = match matches.value_of("direction").unwrap() {
     "l2r" => img,
@@ -34,6 +34,23 @@ fn main() {
       println!("sorting pixels...");
       image::DynamicImage::ImageRgb8(sorter::sort(buf, intervals))
     },
+    Some("mask") => {
+      let mask_path = matches.subcommand_matches("mask")
+        .unwrap().value_of("mask").unwrap();
+      println!("opening mask picture...");
+      let mut mask = image::open(mask_path).expect("mask not found");
+      mask = match matches.value_of("direction").unwrap() {
+        "l2r" => mask,
+        "r2l" => mask.rotate180(),
+        "t2b" => mask.rotate270(), 
+        "b2t" => mask.rotate90(),
+        _ => {panic!()}
+      };
+      println!("computing intervals...");
+      let intervals = intervals::mask(&mask.to_rgb());
+      image::DynamicImage::ImageRgb8(sorter::sort(buf, intervals))
+
+    }
     _ => panic!("You need to provide an interval function. For more information use --help.")
   };
 
